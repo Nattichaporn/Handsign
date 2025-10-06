@@ -4,28 +4,25 @@ const canvasElement = document.getElementById("output");
 const canvasCtx = canvasElement.getContext("2d");
 const statusEl = document.getElementById("status");
 const predictedLetterEl = document.getElementById("predicted-letter");
-const currentWordEl = document.getElementById("current-word");
 
 // --- ตัวแปรสำหรับจัดการสถานะ ---
-let currentWord = "";
-let lastPrediction = "?";
-let lastCaptureTime = 0;
-const CAPTURE_COOLDOWN = 1000; // 1 วินาที
+let isPredicting = false; // ป้องกันการส่งข้อมูลซ้ำซ้อนเร็วเกินไป
 
-// **สำคัญ:** แก้ไข URL นี้ให้เป็น URL ของ Backend บน Render.com ของคุณ
+// 🚨 **สำคัญ:** แก้ไข URL นี้ให้เป็น URL ของ Backend บน Render.com ของคุณ
 const API_ENDPOINT = "https://handsign-33az.onrender.com/upload"; 
 
-// **สำคัญ:** รายชื่อตัวอักษรที่โมเดลของคุณทายได้ (ต้องเรียงลำดับให้ถูกต้อง)
-const ALPHABET_MAP = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+// 🚨 **สำคัญ:** รายชื่อตัวอักษรที่โมเดลของคุณทายได้ (ต้องเรียงลำดับให้ถูกต้อง!)
+// ตัวอย่าง: ถ้าโมเดลทายเลข 0 หมายถึง A, เลข 1 หมายถึง B
+const ALPHABET_MAP = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
 
 
-// --- MediaPipe Hands Setup (อัปเดตให้รองรับ 2 มือ) ---
+// --- MediaPipe Hands Setup ---
 const hands = new Hands({
   locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${file}`,
 });
 
 hands.setOptions({
-  maxNumHands: 2, // ⬅️ เปลี่ยนเป็น 2 มือ
+  maxNumHands: 1,
   modelComplexity: 1,
   minDetectionConfidence: 0.7,
   minTrackingConfidence: 0.7,
@@ -39,38 +36,18 @@ hands.onResults((results) => {
 
   // ถ้าตรวจพบมือ
   if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-    let signHand = null;
-    let controlHand = null;
-
-    // แยกมือซ้าย-ขวา
-    for (let i = 0; i < results.multiHandLandmarks.length; i++) {
-      const classification = results.multiHandedness[i];
-      const landmarks = results.multiHandLandmarks[i];
-      
-      // วาดเส้นบนมือ
-      drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: '#FFFFFF', lineWidth: 5 });
-      drawLandmarks(canvasCtx, landmarks, { color: '#00FF00', lineWidth: 2 });
-      
-      // สมมติ: มือซ้ายทำท่า, มือขวาควบคุม
-      if (classification.label === 'Left') {
-        signHand = landmarks;
-      } else if (classification.label === 'Right') {
-        controlHand = landmarks;
-      }
-    }
-
-    // ถ้ามีมือสำหรับทำท่า (มือซ้าย)
-    if (signHand) {
-      predictInRealtime(signHand);
-    }
+    const landmarks = results.multiHandLandmarks[0];
     
-    // ถ้ามีมือสำหรับควบคุม (มือขวา) และเป็นท่ากำมือ
-    if (controlHand && isFist(controlHand)) {
-      captureLetter();
-    }
+    // วาดเส้นบนมือ
+    drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: '#FFFFFF', lineWidth: 5 });
+    drawLandmarks(canvasCtx, landmarks, { color: '#00FF00', lineWidth: 2 });
+    
+    // 🧠 ส่งข้อมูลไปทายผลแบบ Real-time
+    predictInRealtime(landmarks);
 
   } else {
-    statusEl.textContent = "No hand detected";
+    statusEl.textContent = "ไม่พบมือในกล้อง";
+    predictedLetterEl.textContent = "?";
   }
 
   canvasCtx.restore();
@@ -78,13 +55,15 @@ hands.onResults((results) => {
 
 
 // --- ฟังก์ชันใหม่: ส่งข้อมูลไปทายผลแบบ Real-time ---
-let isPredicting = false;
 async function predictInRealtime(landmarks) {
-  if (isPredicting) return; // ป้องกันการส่งข้อมูลซ้ำซ้อน
+  // ถ้ากำลังทายผลอยู่ ให้ข้ามไปก่อน เพื่อไม่ให้ส่งข้อมูลถี่เกินไป
+  if (isPredicting) return; 
+  
   isPredicting = true;
-  statusEl.textContent = "🧠 Analyzing...";
+  statusEl.textContent = "🧠 กำลังวิเคราะห์...";
 
   // แปลง Landmarks เป็นแถวเดียวของ CSV
+  // (เหมือนตอนเก็บข้อมูล แต่ทำแค่เฟรมเดียว)
   const flatLandmarks = landmarks.flatMap(lm => [lm.x, lm.y, lm.z]);
   const headers = Array.from({ length: 63 }, (_, i) => `p${i + 1}`).join(",");
   const csvRow = flatLandmarks.join(",");
@@ -96,60 +75,26 @@ async function predictInRealtime(landmarks) {
 
   try {
     const response = await fetch(API_ENDPOINT, { method: "POST", body: formData });
+    if (!response.ok) {
+        throw new Error(`Server error: ${response.statusText}`);
+    }
     const result = await response.json();
     
-    // หาค่าความน่าจะเป็นที่สูงสุด
+    // หาค่าความน่าจะเป็นที่สูงสุดจากผลลัพธ์
     const predictionScores = result[0];
     const maxScoreIndex = predictionScores.indexOf(Math.max(...predictionScores));
     
-    // แปลงเป็นตัวอักษร
-    lastPrediction = ALPHABET_MAP[maxScoreIndex] || "?";
-    predictedLetterEl.textContent = lastPrediction;
-    statusEl.textContent = "🟢 Ready";
+    // แปลงเป็นตัวอักษรจาก MAP ที่เรากำหนดไว้
+    const predictedLetter = ALPHABET_MAP[maxScoreIndex] || "?";
+    predictedLetterEl.textContent = predictedLetter;
+    statusEl.textContent = "🟢 กำลังตรวจจับ...";
 
   } catch (error) {
     console.error("Prediction Error:", error);
-    statusEl.textContent = "❌ Prediction Failed";
+    statusEl.textContent = "❌ เกิดข้อผิดพลาดในการวิเคราะห์";
   } finally {
-    // กำหนดดีเลย์เล็กน้อยก่อนการทายผลครั้งถัดไป
-    setTimeout(() => { isPredicting = false; }, 200);
-  }
-}
-
-// --- ฟังก์ชันใหม่: ตรวจจับท่า "กำมือ" (แบบง่าย) ---
-function isFist(landmarks) {
-    // หลักการ: วัดระยะห่างระหว่างปลายนิ้วกับฝ่ามือ
-    const palmBase = landmarks[0]; 
-    const fingerTips = [landmarks[8], landmarks[12], landmarks[16], landmarks[20]]; // ปลายนิ้วชี้, กลาง, นาง, ก้อย
-    
-    let totalDistance = 0;
-    for (const tip of fingerTips) {
-        const distance = Math.sqrt(
-            Math.pow(tip.x - palmBase.x, 2) +
-            Math.pow(tip.y - palmBase.y, 2) +
-            Math.pow(tip.z - palmBase.z, 2)
-        );
-        totalDistance += distance;
-    }
-    
-    // ค่าเฉลี่ยระยะห่าง (ปรับค่า 0.15 ได้ตามความเหมาะสม)
-    return (totalDistance / fingerTips.length) < 0.15;
-}
-
-
-// --- ฟังก์ชันใหม่: ยืนยันตัวอักษรและReset ---
-function captureLetter() {
-  const now = Date.now();
-  if (now - lastCaptureTime > CAPTURE_COOLDOWN) {
-      if (lastPrediction !== "?") {
-        currentWord += lastPrediction;
-        currentWordEl.textContent = currentWord;
-      }
-      // ถ้าต้องการให้การกำมือเป็นการ Reset ด้วย ให้เพิ่มโค้ดนี้:
-      // currentWord = ""; // ล้างคำทั้งหมด
-      
-      lastCaptureTime = now; // ป้องกันการกดรัวๆ
-      statusEl.textContent = `✅ Captured: ${lastPrediction}`;
+    // กำหนดดีเลย์เล็กน้อยก่อนการทายผลครั้งถัดไป เพื่อลดภาระเซิร์ฟเวอร์
+    setTimeout(() => { isPredicting = false; }, 300); // 0.3 วินาที
   }
 }
 
