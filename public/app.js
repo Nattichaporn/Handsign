@@ -85,7 +85,7 @@ function saveCSV(data) {
   const formData = new FormData();
   formData.append("csvfile", blob, filename);
 
-fetch("https://handsign-33az.onrender.com", {
+fetch("https://handsign-33az.onrender.com/upload", {
   method: "POST",
   body: formData,
 })
