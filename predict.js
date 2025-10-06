@@ -14,18 +14,16 @@ export async function predictFromCSV(csvPath) {
   const data = parsed.data.filter((r) => Object.keys(r).length > 1);
   const X = data.map((row) => Object.values(row));
   const tensor = tf.tensor2d(X);
-  console.log("📦 ขนาดอินพุต:", tensor.shape);
 
   if (!cachedModel) {
-      console.log("🧠 กำลังโหลดโมเดลจากไฟล์...");
+      console.log("🧠 Loading model from file...");
       const modelPath = path.resolve(__dirname, 'model/model.json');
-      // ✅ บรรทัดสำคัญที่แก้ไขแล้ว
+      // ✅ **บรรทัดสำคัญ:** ต้องเป็น file://${modelPath}
       cachedModel = await tf.loadLayersModel(`file://${modelPath}`); 
-      console.log("✅ โหลดโมเดลสำเร็จ!");
+      console.log("✅ Model loaded successfully!");
   }
 
   const preds = cachedModel.predict(tensor);
   const result = preds.arraySync();
-  console.log("✅ ผลลัพธ์ตัวอย่าง:", result[result.length - 1]);
   return result;
 }
