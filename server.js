@@ -27,9 +27,10 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+// ...
 // 📥 Endpoint รับ CSV ที่อัปโหลด
-app.post("/upload", upload.single("csvfile"), async (req, res) => {
-  try {
+app.post("/predict", upload.single("csvfile"), async (req, res) => { // <--- แก้ไขบรรทัดนี้
+// 
     if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
     const filePath = path.join(uploadDir, req.file.filename);
