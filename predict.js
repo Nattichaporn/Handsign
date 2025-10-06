@@ -1,6 +1,7 @@
 import * as tf from "@tensorflow/tfjs-node";
 import fs from "fs";
-import { parse } from "papaparse"; 
+import pkg from 'papaparse'; // ⬅️ บรรทัดที่ 1: Import ตัว Library หลักเข้ามาก่อน
+const { parse } = pkg;       // ⬅️ บรรทัดที่ 2: ดึงฟังก์ชัน parse ออกมาจาก Library นั้น 
 import { fileURLToPath } from "url";
 import path from "path";
 
