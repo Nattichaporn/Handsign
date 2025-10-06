@@ -1,6 +1,6 @@
 import * as tf from "@tensorflow/tfjs-node";
 import fs from "fs";
-import Papa from "papaparse";
+import { parse } from "papaparse"; 
 import { fileURLToPath } from "url";
 import path from "path";
 
@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 
 export async function predictFromCSV(csvPath) {
   const csvFile = fs.readFileSync(csvPath, "utf8");
-  const parsed = Papa.parse(csvFile, { header: true, dynamicTyping: true });
+  const parsed = parse(csvFile, { header: true, dynamicTyping: true }); // ⬅️ เรียกใช้ parse() ตรงๆ
   const data = parsed.data.filter((r) => Object.keys(r).length > 1);
   const X = data.map((row) => Object.values(row));
   const tensor = tf.tensor2d(X);
