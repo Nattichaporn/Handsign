@@ -19,7 +19,7 @@ export async function predictFromCSV(csvPath) {
       console.log("🧠 Loading model from file...");
       const modelPath = path.resolve(__dirname, 'model/model.json');
       // ✅ **บรรทัดสำคัญ:** ต้องเป็น file://${modelPath}
-      cachedModel = await tf.loadLayersModel(`file://${modelPath}`); 
+      cachedModel = await tf.loadLayersModel(`file://${modelPath}`);
       console.log("✅ Model loaded successfully!");
   }
 
