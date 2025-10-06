@@ -29,8 +29,8 @@ const upload = multer({ storage });
 
 // ...
 // 📥 Endpoint รับ CSV ที่อัปโหลด
-app.post("/predict", upload.single("csvfile"), async (req, res) => { // <--- แก้ไขบรรทัดนี้
-// 
+app.post("/predict", upload.single("csvfile"), async (req, res) => {
+  try {
     if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
     const filePath = path.join(uploadDir, req.file.filename);
