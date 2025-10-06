@@ -13,13 +13,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(__dirname)); // ให้เข้าถึงไฟล์ทั้งหมดจาก root ได้ (เช่น index.html)
 app.use(express.json());
 
 const uploadDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
@@ -27,21 +25,17 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Endpoint สำหรับทำนายผล
+// Endpoint สำหรับทำนายผล (สำคัญมาก ต้องเป็น /predict)
 app.post("/predict", upload.single("csvfile"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file was uploaded." });
   }
-
-  const filePath = req.file.path;
-  console.log(`📁 Received file: ${filePath}`);
-
+  
   try {
-    const prediction = await predictFromCSV(filePath);
+    const prediction = await predictFromCSV(req.file.path);
     res.json(prediction);
   } catch (error) {
-    console.error("Server Prediction Error:", error.message);
-    res.status(500).json({ error: "Failed to process the prediction." });
+    res.status(500).json({ error: "Failed to process prediction." });
   }
 });
 
