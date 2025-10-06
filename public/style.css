@@ -1,0 +1,36 @@
+body {
+  text-align: center;
+  background: #f8fafc;
+  font-family: sans-serif;
+}
+
+video, canvas {
+  border-radius: 10px;
+  width: 640px;
+  height: 480px;
+  margin-top: 20px;
+  border: 2px solid #ccc;
+}
+
+.btn-container {
+  margin-top: 15px;
+}
+
+button {
+  padding: 10px 20px;
+  margin: 5px;
+  border: none;
+  background: #4f46e5;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: gray;
+}
+
+#status {
+  margin-top: 10px;
+  color: #111827;
+}

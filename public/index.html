@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✋ Hand Sign Recorder</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>✋ Hand Sign Recorder</h1>
+  
+  <div class="container">
+    <video id="video" autoplay></video>
+    <canvas id="output" width="640" height="480"></canvas>
+  </div>
+
+  <div class="controls">
+    <button id="recordBtn">📸 บันทึกท่ามือ</button>
+    <p id="status">🟢 พร้อมบันทึก</p>
+  </div>
+
+  <!-- ✅ โหลด Library ที่จำเป็น -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js"></script>
+
+  <!-- ✅ โหลดสคริปต์หลักหลัง DOM โหลดเสร็จ -->
+  <script src="app.js"></script>
+</body>
+</html>
