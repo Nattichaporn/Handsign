@@ -3,28 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>✋ Hand Sign Recorder</title>
+  <title>✋ Real-time Hand Sign Recognition</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>✋ Hand Sign Recorder</h1>
+  <h1>✋ Real-time Hand Sign Recognition</h1>
   
   <div class="container">
     <video id="video" autoplay></video>
     <canvas id="output" width="640" height="480"></canvas>
   </div>
 
-  <div class="controls">
-    <button id="recordBtn">📸 บันทึกท่ามือ</button>
-    <p id="status">🟢 พร้อมบันทึก</p>
+  <div class="results">
+    <h2>Predicted Letter: <span id="predicted-letter">?</span></h2>
+    <h3>Current Word: <span id="current-word"></span></h3>
+    <p id="status">🟢 Detecting...</p>
   </div>
 
-  <!-- ✅ โหลด Library ที่จำเป็น -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js"></script>
 
-  <!-- ✅ โหลดสคริปต์หลักหลัง DOM โหลดเสร็จ -->
   <script src="app.js"></script>
 </body>
 </html>
